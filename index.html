@@ -93,6 +93,7 @@ footer{text-align:center;color:var(--mut);font-size:11px;margin-top:18px}
   <div class="bar" id="bar1"></div>
   <div class="t" id="tbl"></div>
   <div class="n" style="font-size:12px;color:var(--mut);margin-top:8px" id="rnote"></div>
+  <div class="hint" id="mode" style="margin-top:10px;font-weight:800"></div>
   <span class="badge" id="rbadge"></span>
 </section>
 
@@ -121,11 +122,17 @@ const EX={base:142810,inf:435010,cav:284396,arch:450783,cap:90000};
 const HX={English:['History','Clear all','Tap an entry to reload it.','en'],'Italiano':['Cronologia','Cancella tutto','Tocca una voce per ricaricarla.','it'],'Deutsch':['Verlauf','Alles löschen','Eintrag antippen, um ihn neu zu laden.','de'],'العربية':['السجل','مسح الكل','اضغط على عنصر لإعادة تحميله.','ar'],'Français':['Historique','Tout effacer','Touchez une entrée pour la recharger.','fr'],'한국어':['기록','모두 삭제','항목을 눌러 다시 불러오세요.','ko'],'Filipino':['Kasaysayan','Burahin lahat','I-tap ang entry para i-load ulit.','fil'],'Español':['Historial','Borrar todo','Toca una entrada para recargarla.','es'],'Português':['Histórico','Limpar tudo','Toque numa entrada para a recarregar.','pt']};
 let H=[];try{H=JSON.parse(localStorage.getItem('bhrc_hist')||'[]')||[]}catch(e){}
 let LAST=null;
+const SQN={English:'4–6, not counting your own rally','Italiano':'4–6, escluso il tuo raduno','Deutsch':'4–6, ohne deine eigene Rally','العربية':'من 4 إلى 6، دون احتساب حشدك الخاص','Français':'4 à 6, sans compter votre propre ralliement','한국어':'4~6개, 본인 집결은 제외','Filipino':'4–6, hindi kasama ang sarili mong rally','Español':'4–6, sin contar tu propia concentración','Português':'4–6, sem contar a tua própria concentração'};
+const PET={English:['Mighty Bison – skill level','Level 0–10. Each level adds +1,500 troops to your rally (max +15,000).'],'Italiano':['Bisonte Possente – livello abilità','Livello 0–10. Ogni livello aggiunge +1.500 truppe al tuo raduno (max +15.000).'],'Deutsch':['Mächtiger Bison – Fähigkeitsstufe','Stufe 0–10. Jede Stufe gibt +1.500 Truppen für deine Rally (max. +15.000).'],'العربية':['الثور الجبّار – مستوى المهارة','المستوى 0–10. كل مستوى يضيف 1500 جندي إلى حشدك (الحد الأقصى 15000).'],'Français':['Bison puissant – niveau de compétence','Niveau 0–10. Chaque niveau ajoute +1 500 troupes à votre ralliement (max +15 000).'],'한국어':['강력한 들소 – 스킬 레벨','레벨 0~10. 레벨당 집결 병력 +1,500 (최대 +15,000).'],'Filipino':['Mighty Bison – antas ng skill','Level 0–10. Bawat level ay nagdaragdag ng +1,500 troops sa rally mo (max +15,000).'],'Español':['Bisonte Poderoso – nivel de habilidad','Nivel 0–10. Cada nivel suma +1.500 tropas a tu concentración (máx. +15.000).'],'Português':['Bisão Poderoso – nível da habilidade','Nível 0–10. Cada nível soma +1.500 tropas à tua concentração (máx. +15.000).']};
+for(const l in PET){TR[l].f_bison=PET[l][0];TR[l].h_bison=PET[l][1]}
+const MC={English:['Minimum cavalry per joiner squad','Reserved in every joiner squad: archers cannot take this space.'],'Italiano':['Cavalleria minima per squadra partecipante','Riservata in ogni squadra partecipante: gli arceri non possono occupare questo spazio.'],'Deutsch':['Mindestkavallerie pro Beitrittstrupp','In jedem Trupp reserviert: Bogenschützen können diesen Platz nicht belegen.'],'العربية':['الحد الأدنى للفرسان في كل فرقة منضمة','محجوز في كل فرقة: لا يمكن للرماة شغل هذه المساحة.'],'Français':['Cavalerie minimale par escouade participante','Réservée dans chaque escouade : les archers ne peuvent pas prendre cette place.'],'한국어':['참가 부대당 최소 기병','각 부대에 예약됨: 궁수가 이 자리를 차지할 수 없습니다.'],'Filipino':['Minimum na cavalry kada joiner squad','Nakareserba sa bawat squad: hindi ito maaaring kunin ng archers.'],'Español':['Caballería mínima por escuadra participante','Reservada en cada escuadra: los arqueros no pueden ocupar este espacio.'],'Português':['Cavalaria mínima por esquadra participante','Reservada em cada esquadra: os arqueiros não podem ocupar este espaço.']};
+for(const l in MC){TR[l].f_mincav=MC[l][0];TR[l].h_mincav=MC[l][1]}
+const MODE={"English": ["Not enough archers to fill {n} squads at 98% (missing {m}): squads keep the minimum cavalry and infantry and your rally keeps at least 10% of each type.", "Squads are full at 98% archers. Extra archers now go to your rally ({p}% archers) toward 80/10/10.", "Equilibrium reached: your rally and all {n} squads are at 80/10/10."], "Italiano": ["Arceri insufficienti per riempire le {n} squadre al 98% (mancano {m}): le squadre tengono il minimo di cavalleria e fanteria e il tuo raduno mantiene almeno il 10% per ogni tipo.", "Squadre piene al 98% di arceri. Gli arceri in più vanno al tuo raduno ({p}% arceri) verso 80/10/10.", "Equilibrio raggiunto: il tuo raduno e tutte le {n} squadre sono a 80/10/10."], "Deutsch": ["Nicht genug Bogenschützen, um {n} Trupps zu 98 % zu füllen (es fehlen {m}): die Trupps behalten das Minimum an Kavallerie und Infanterie, dein Rally mindestens 10 % je Typ.", "Trupps sind zu 98 % mit Bogenschützen gefüllt. Weitere Bogenschützen gehen in dein Rally ({p} % Bogenschützen) Richtung 80/10/10.", "Gleichgewicht erreicht: dein Rally und alle {n} Trupps sind bei 80/10/10."], "العربية": ["عدد الرماة غير كافٍ لملء {n} فرق بنسبة 98% (ينقص {m}): تحتفظ الفرق بالحد الأدنى من الفرسان والمشاة ويحتفظ حشدك بـ 10% على الأقل من كل نوع.", "الفرق ممتلئة بنسبة 98% رماة. الرماة الإضافيون يذهبون إلى حشدك ({p}% رماة) نحو 80/10/10.", "تم بلوغ التوازن: حشدك وجميع الفرق ({n}) بنسبة 80/10/10."], "Français": ["Pas assez d'archers pour remplir {n} escouades à 98 % (il en manque {m}) : les escouades gardent le minimum de cavalerie et d'infanterie et votre ralliement garde au moins 10 % de chaque type.", "Escouades remplies à 98 % d'archers. Les archers en plus vont à votre ralliement ({p} % d'archers) vers 80/10/10.", "Équilibre atteint : votre ralliement et les {n} escouades sont à 80/10/10."], "한국어": ["{n}개 부대를 98%로 채울 궁수가 부족합니다({m}명 부족). 부대는 기병과 보병 최소치를 유지하고 내 집결은 각 병종 최소 10%를 유지합니다.", "부대가 궁수 98%로 가득 찼습니다. 남는 궁수는 내 집결(궁수 {p}%)로 가며 80/10/10에 가까워집니다.", "균형 달성: 내 집결과 {n}개 부대 모두 80/10/10입니다."], "Filipino": ["Kulang ang archers para mapuno ang {n} squads sa 98% (kulang ng {m}): nananatili ang minimum na cavalry at infantry sa squads, at hindi bababa sa 10% bawat uri sa rally mo.", "Puno na ang squads sa 98% archers. Ang sobrang archers ay napupunta sa rally mo ({p}% archers) papunta sa 80/10/10.", "Naabot ang balanse: ang rally mo at lahat ng {n} squads ay nasa 80/10/10."], "Español": ["No hay arqueros suficientes para llenar {n} escuadras al 98 % (faltan {m}): las escuadras mantienen el mínimo de caballería e infantería y tu concentración conserva al menos el 10 % de cada tipo.", "Escuadras llenas al 98 % de arqueros. Los arqueros extra van a tu concentración ({p} % de arqueros) hacia 80/10/10.", "Equilibrio alcanzado: tu concentración y las {n} escuadras están al 80/10/10."], "Português": ["Não há arqueiros suficientes para encher {n} esquadras a 98 % (faltam {m}): as esquadras mantêm o mínimo de cavalaria e infantaria e a tua concentração mantém pelo menos 10 % de cada tipo.", "Esquadras cheias a 98 % de arqueiros. Os arqueiros extra vão para a tua concentração ({p} % de arqueiros) rumo a 80/10/10.", "Equilíbrio alcançado: a tua concentração e as {n} esquadras estão a 80/10/10."]};
 const EG={English:'e.g.','Italiano':'es.','Deutsch':'z. B.','العربية':'مثال:','Français':'ex.','한국어':'예:','Filipino':'hal.','Español':'p. ej.','Português':'ex.'};
-function saveLast(){try{const d={};['base','inf','cav','arch','val','cap'].forEach(k=>d[k]=S[k]);localStorage.setItem('bhrc_last',JSON.stringify(d))}catch(e){}}
+function saveLast(){try{const d={};['base','inf','cav','arch','val','bison','cap','sq'].forEach(k=>d[k]=S[k]);localStorage.setItem('bhrc_last',JSON.stringify(d))}catch(e){}}
 function restore(){try{const d=JSON.parse(localStorage.getItem('bhrc_last')||'null');if(!d)return;
-  ['base','inf','cav','arch','val','cap'].forEach(k=>{const v=Number(d[k]);if(v>0){S[k]=v;$('i_'+k).value=k==='val'?v:fmt(v)}})}catch(e){}}
-const DEF={base:'',inf:'',cav:'',arch:'',val:'',cap:'',bonus:3000,sq:6,res:1000,lang:'Italiano'};
+  ['base','inf','cav','arch','val','bison','cap','sq'].forEach(k=>{const v=Number(d[k]);if(k==='bison'){if(v>=0&&v<=10){S.bison=v;$('i_bison').value=v}return}if(k==='sq'){if(v>=4&&v<=6){S.sq=v;$('i_sq').value=v}return}if(v>0){S[k]=v;$('i_'+k).value=k==='val'?v:fmt(v)}})}catch(e){}}
+const DEF={mincav:1000,bison:0,base:'',inf:'',cav:'',arch:'',val:'',cap:'',bonus:3000,sq:6,res:1000,lang:'Italiano'};
 const X={English:['Submit','Please fill in all fields to see the results.','Fill in your data and tap Submit to see the results.','Kingshot fan tool · App made by Mandi'],
 'Italiano':['Invia','Compila tutti i campi per vedere i risultati.','Inserisci i tuoi dati e premi Invia per vedere i risultati.','Kingshot fan tool · App creata da Mandi'],
 'Deutsch':['Senden','Bitte alle Felder ausfüllen, um die Ergebnisse zu sehen.','Daten eingeben und auf Senden tippen, um die Ergebnisse zu sehen.','Kingshot-Fan-Tool · App von Mandi'],
@@ -142,13 +149,13 @@ const xr=x=>x<0?-Math.round(-x):Math.round(x); // Excel ROUND
 const t=k=>TR[S.lang][k];
 const fmt=n=>Number(n).toLocaleString('it-IT');
 
-const FIELDS=[['base','f_base','h_base'],['inf','f_inf','h_inf'],['cav','f_cav','h_cav'],['arch','f_arch','h_arch'],['val','f_val','h_val','sel'],['cap','f_cap','h_cap']];
-const FIXED=[['bonus','a_bonus','h_abonus'],['sq','a_sq','h_asq'],['res','a_res','h_ares']];
+const FIELDS=[['base','f_base','h_base'],['inf','f_inf','h_inf'],['cav','f_cav','h_cav'],['arch','f_arch','h_arch'],['val','f_val','h_val','sel'],['bison','f_bison','h_bison','sel'],['cap','f_cap','h_cap'],['sq','a_sq','h_asq','sel']];
+const FIXED=[['bonus','a_bonus','h_abonus'],['res','a_res','h_ares'],['mincav','f_mincav','h_mincav']];
 
 function field([id,lab,hlp,type]){
   const d=document.createElement('div');d.className='f';
   const input=type==='sel'
-   ?`<select id="i_${id}" style="width:100%;font-size:18px">${Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>`.replace('>','><option value="">—</option>')
+   ?`<select id="i_${id}" style="width:100%;font-size:18px">${id==='val'?'<option value="">—</option>':''}${(id==='sq'?[4,5,6]:id==='bison'?Array.from({length:11},(_,i)=>i):Array.from({length:10},(_,i)=>i+1)).map(n=>`<option value="${n}">${n}</option>`).join('')}</select>`
    :`<input id="i_${id}" inputmode="numeric" autocomplete="off">`;
   d.innerHTML=`<label for="i_${id}" data-t="${lab}"></label><small data-t="${hlp}"></small>${input}`;
   return d;
@@ -160,7 +167,7 @@ function build(){
   [...FIELDS,...FIXED].forEach(([id,,,type])=>{
     const el=$('i_'+id);
     const fixed=FIXED.some(f=>f[0]===id);
-    if(type==='sel'){el.value='';el.onchange=()=>{S[id]=el.value===''?'':+el.value;el.classList.remove('miss');stale()};return}
+    if(type==='sel'){el.value=id==='sq'?String(S.sq):id==='bison'?'0':'';el.onchange=()=>{S[id]=el.value===''?'':+el.value;el.classList.remove('miss');stale()};return}
     if(fixed)el.value=fmt(S[id]);
     el.oninput=()=>{const v=el.value.replace(/\D/g,'');S[id]=v===''?'':Math.min(+v,999999999);el.classList.remove('miss');stale()};
     el.onblur=()=>{el.value=S[id]===''?'':fmt(S[id])};
@@ -170,7 +177,7 @@ function build(){
   $('go').onclick=submit;
   $('hList').onclick=ev=>{const x=ev.target.closest('[data-x]');if(x){H.splice(+x.dataset.x,1);saveH();renderH();return}const i=ev.target.closest('[data-n]');if(i)loadH(+i.dataset.n)};
   $('hClear').onclick=()=>{H=[];saveH();renderH()};
-  ORDER.forEach((k,n)=>{const el=$('i_'+k);if(k!=='val')el.enterKeyHint=n<5?'next':'done';el.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();n<5?$('i_'+ORDER[n+1]).focus():submit()}})});
+  ORDER.forEach((k,n)=>{const el=$('i_'+k);if(k!=='val'&&k!=='sq'&&k!=='bison')el.enterKeyHint=n<ORDER.length-1?'next':'done';el.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();n<ORDER.length-1?$('i_'+ORDER[n+1]).focus():submit()}})});
 }
 function texts(){
   document.documentElement.dir=RTL.includes(S.lang)?'rtl':'ltr';
@@ -179,11 +186,12 @@ function texts(){
   const m={title:'title',s1:'s1',s2:'s2',s3:'s3',s4:'s4',adv:'adv',rsizeL:'r_size',rsizeN:'h_rsize',rnote:'r_note',jtotL:'j_total',lgt:'lg_tip',lgtd:'lg_tip_d'};
   for(const k in m)$(k).textContent=t(m[k]);
   document.title=t('title');renderH();
+  $('i_sq').parentElement.querySelector('small').textContent=t('h_asq')+' ('+SQN[S.lang]+')';
   ['base','inf','cav','arch','cap'].forEach(k=>{$('i_'+k).placeholder=EG[S.lang]+' '+fmt(EX[k])});
 }
 const COL={inf:'var(--inf)',cav:'var(--cav)',arch:'var(--arc)'};
 let shown=false;
-const ORDER=['base','inf','cav','arch','val','cap'];
+const ORDER=['base','inf','cav','arch','val','bison','cap','sq'];
 function saveH(){try{localStorage.setItem('bhrc_hist',JSON.stringify(H))}catch(e){}}
 function addHist(){
   const d={};ORDER.forEach(k=>d[k]=S[k]);const key=JSON.stringify(d);
@@ -198,7 +206,7 @@ function renderH(){
 }
 function loadH(n){
   const e=H[n];if(!e)return;
-  ORDER.forEach(k=>{S[k]=e.d[k];const el=$('i_'+k);el.value=k==='val'?e.d[k]:fmt(e.d[k]);el.classList.remove('miss')});
+  ORDER.forEach(k=>{const v=e.d[k]??(k==='sq'?6:k==='bison'?0:'');S[k]=v;const el=$('i_'+k);el.value=(k==='val'||k==='sq'||k==='bison')?v:fmt(v);el.classList.remove('miss')});
   $('err').style.display='none';calc();shown=true;$('results').style.display='block';
   $('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -213,14 +221,22 @@ function submit(){
   $('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function calc(){
-  const {base,inf,cav,arch,val,cap,bonus,sq,res}=S;
-  const vb=(val>=1&&val<=10)?val*bonus:0, size=base+vb;
-  const sum=inf+cav+arch||1;
-  const ap=Math.max(10,xr(arch/sum*100)), cp=Math.min(100-ap,xr(cav/sum*100)), ip=100-cp-ap;
-  const ri=xr(size*ip/100), rc=xr(size*cp/100), ra=size-ri-rc;
-  const a=Math.min(xr((arch-ra)/(sq||1)),cap-res);
-  const c=Math.min(xr((cav-rc)/(sq||1)),cap-a-res);
-  const i=Math.min(xr((inf-ri)/(sq||1)),cap-a-c);
+  const {base,inf,cav,arch,val,cap,bonus,sq,res,bison}=S;
+  const vb=(val>=1&&val<=10)?val*bonus:0, size=base+vb+(bison>=0&&bison<=10?bison*1500:0);
+  const N=sq||1, mc=S.mincav>=0?S.mincav:0;
+  const a98=cap-res-mc, ownMin=Math.max(1000,xr(size*.1)), o80=xr(size*.8);
+  const full=arch>=N*a98+ownMin, eq=arch>=N*a98+o80;
+  let ap,cp,ip,ri,rc,ra,a,c,i,ph;
+  if(eq){ph=3;a=Math.min(xr(cap*.8),a98);c=Math.min(Math.max(mc,xr(cap*.1)),Math.floor(cav/N));i=Math.min(cap-a-c,Math.floor(inf/N))}
+  else{ph=full?2:1;a=Math.min(a98,Math.floor((arch-Math.min(ownMin,arch))/N));c=Math.min(mc,Math.floor(cav/N));i=Math.min(res,Math.floor(inf/N))}
+  const la=arch-N*a,cL=cav-N*c,iL=inf-N*i;
+  ra=Math.min(o80,la);const R=size-ra;
+  ri=Math.min(ownMin,iL);rc=R-ri;
+  if(rc>cL){rc=cL;ri=Math.min(iL,R-rc)}
+  ap=xr(ra/size*100);cp=xr(rc/size*100);ip=100-ap-cp;
+  const mt=MODE[S.lang];
+  $('mode').style.color=ph===1?'var(--gold)':'var(--ok)';
+  $('mode').textContent=mt[ph-1].replace('{n}',N).replace('{m}',fmt(Math.max(0,N*a98+ownMin-arch))).replace('{p}',ap);
   const jt=i+c+a;LAST={size,i,c,a};
 
   $('rsize').textContent=fmt(size);
@@ -239,7 +255,7 @@ function calc(){
    <div class="pbar"><i style="width:${Math.max(0,p*100)}%;background:${COL[j[0]]}"></i></div>
    <p>${(p*100).toFixed(1)}% ${t('j_pct').replace(/^%\s*/,'')} · ${t(j[3])}</p></div>`}).join('');
   $('jtot').textContent=fmt(jt)+' / '+fmt(cap);
-  const okJ=jt===cap;
+  const okJ=jt<=cap&&a>0;
   setB('jbadge',okJ,okJ?t('ok'):t('bad_cap'));
 }
 function setB(id,ok,txt){const e=$(id);e.className='badge'+(ok?'':' bad');e.textContent=(ok?'✔ ':'⚠ ')+txt}
